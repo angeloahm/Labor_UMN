@@ -1,0 +1,22 @@
+
+function out = budget_balance(taxes)
+% This code computes the government budget balance
+
+
+read_parameters;
+
+%Define taxes
+tau=taxes;
+
+%Solve model for a given tau
+solve_model;
+
+%Compute stationary distribution
+simulation;
+
+w_matrix = w_grid' * ones(1,n_h);
+h_matrix = ones(n_w,1) * h_grid;
+revenue = sum( tau*b.*(1-policy_employed(:).*dist(:)) ) + sum(policy_employed(:).*dist(:).*w_matrix.*h_matrix);
+cost = 
+
+end

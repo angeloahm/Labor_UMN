@@ -1,0 +1,56 @@
+% Code to solve a simplified version of Ljungqvist and Sargent (1998)
+% Angelo Mendes 
+% University of Minnesota
+
+clc
+clear
+close all
+
+%Start timer
+tic
+
+
+read_parameters
+
+if eq==1
+    %Find equilibrium
+    fprintf('=========== FINDING EQ. TAXES ===========\n')
+    tau_star = bisection(@budget_balance, 0.02, 0.0222, 100, 0.001);
+    %Solve model again with the equilibrium tau
+    budget_balance(tau_star)
+else
+    %Solve model for a specific tau
+    budget_balance(tau_guess)
+end
+
+% tau_grid = linspace(0.02,0.04,10);
+% vector_excess = ones(1, 10);
+% 
+% for t=1:10
+%     tau = tau_grid(t);
+%     out = budget_balance(tau);
+%     vector_excess(t) = out;
+% end
+% 
+% figure(1)
+% plot(tau_grid, vector_excess,tau_grid, zeros(1,length(tau_grid)))
+
+figure(1)
+plot(h_grid, policy_effort)
+xlabel('Human capital')
+ylabel('s(h)')
+
+
+% End timer
+toc
+
+
+
+
+
+
+
+
+
+
+

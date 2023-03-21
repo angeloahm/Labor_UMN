@@ -1,0 +1,97 @@
+% This code solves the unemployed/employed problems
+
+read_parameters
+
+%Allocate arrays 
+aux = ones(n_w);
+U0 = ones(n_h,1);
+U = ones(n_h,1);
+W0 = ones(n_w, n_h);
+W = ones(n_w, n_h);
+policy_effort = zeros(n_h,1);
+
+%Start VFI
+for iter = 1:max_iter
+    
+    
+    for i_h=1:n_h   %start loop over skills
+        i_h_prime = max(i_h-psi_U,1); %dynamics of human capital for unemployed
+        h = h_grid(i_h);
+        
+        %Reshape U0 to operate matrices
+        U0_matrix = repmat(U0, 1, n_w)';
+        aux = max(W0, U0_matrix);
+        % Unemployed Bellman eq.       
+        RHS = (1-tau)*b - c(s_grid) + beta*(1-alpha)*(pi(s_grid).*sum( aux(:,i_h_prime) .* dF(:) ) + ...
+            (1-pi(s_grid)) .* U0(i_h_prime));
+        [value, i_policy] = max(RHS);
+
+        %Update policy and value
+        U(i_h) = value;
+        policy_effort(i_h) = s_grid(i_policy);
+
+        for i_w=1:n_w   %start loop over wages
+            w = w_grid(i_w);
+            
+            % Employed Bellman eq.
+            W(i_w, i_h) = (1-tau)*w*h + beta*(1-alpha)*( (1-lambda)*W0(i_w, min(i_h+1, n_h)) + ...
+                                                          lambda*U0(max(i_h-psi_F,1))          );
+        end     %end loop over wages
+    end         %end loop over skills
+    
+    %keyboard
+    %Compute norm
+    norm_W = max(abs(W(:)-W0(:)));
+    norm_U = max(abs(U(:)-U0(:)));
+
+    norm = max(norm_U, norm_W);
+    
+    %Check convergence
+    if norm<eps
+        fprintf('Value Function converged!')
+        fprintf('Iter = %.5f \n',iter)
+        break
+    else
+        % Update guesses
+        W0=W;
+        U0=U;
+        if mod(iter,print_skip)==0
+            fprintf('Iter = %.5f \n',iter)
+            fprintf('Error VF = %.8f \n',norm)
+        else
+            continue
+        end
+    end
+
+
+end   %end VFI
+
+            
+% Get the mass of employment-unemployment
+U_matrix = repmat(U, 1, n_w)';  % from vector to matrix
+policy_employed = (W>=U_matrix);
+
+w_res = zeros(1, n_h);
+iw_res = zeros(1,n_h);
+
+% Find reservation wage
+for i_h=1:n_h
+    idx_w = find(policy_employed(:, i_h)==1); % find accepted offers 
+    i_res = min(idx_w(:));                % position of the minimum offer accepted in the grid
+    %Store reservation wage and its position in the w_grid
+    %[rw, i_res] = min(abs(W(:,i_h)-U_matrix(:,i_h)));
+    if (isempty(i_res))
+        iw_res(i_h) = 1e+5;
+        w_res(i_h) = 1e+5;
+    else
+        iw_res(i_h)     =  i_res;                % index of reservation wage
+        w_res(i_h)      =  w_grid(i_res);        % reservation wage
+    end
+end
+
+
+
+
+
+
+

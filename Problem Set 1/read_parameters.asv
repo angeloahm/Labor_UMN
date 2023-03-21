@@ -1,0 +1,57 @@
+% Parameters of the model 
+
+% Solve for equilibrium? 
+eq = 1;
+print_skip = 200;
+rng(100793) % Set the seed
+
+beta = 0.9985;              % 2 week discount factor
+alpha = 0.0009;             % Prob. of dying
+lambda = 0.009;             % Prob. of being laid of 
+b = 0.1;                    % Unemployment benefit
+tau_guess = 0.0033;            % Guess for tau 
+psi_F = 30;                 % Layoff loss
+psi_U = 10;                 % Losses from unemployment
+
+% Iteration parameters
+max_iter = 10000;
+eps = 1e-3;
+
+% Create grids
+n_h = 201;                  % Human capital gridpoints
+n_w = 41;                   % wage gridpoints
+h_lower = 1;
+w_grid = linspace(0,1,n_w);
+h_grid = linspace(h_lower,2,n_h);
+s_grid = [0:0.005:1];
+
+%Simulation parameters 
+T = 200;        %number of simulated periods
+N = 10000;      %number of simulated workers
+
+% Search effort cost 
+c = @(s) 0.5.*s;
+
+% Probability of contact
+pi = @(s) s.^(.3);
+
+%Exogenous wage distribution is normal with mean .5 and varaince of .1,
+%truncated to unit interval and normalized to 1
+mu    =.5; %Mean
+sigma =.1; %Sigma
+draw  =@(z) normpdf(z,mu,sigma)./(sum(normpdf(w_grid,mu,sigma))); %Normal CDF, Probability of a draw z
+up    =@(x) (x+1)*(1-(x+1>=nh)) +(x+1>=nh)*nh; %Move up, trunc at top
+down  =@(x) (x-1)*(1-(x-1<=0)) +(x-1<=0)*1   ; %Move down, trunc at bottom
+
+dF = draw(w_grid);
+F = cumsum(dF);
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,65 @@
+%% Simulation 
+% This code simulates the model using eq. outcomes from 'solve_model.m'
+
+fprintf('=============================\n')
+fprintf('Simulating the model...\n')
+fprintf('=============================\n')
+
+% Allocate arrays 
+w_sim = ones(N, T);     %keep track of indices!
+b_sim = ones(N, T);     %keep track of indices!
+s_sim = ones(N, T);
+u_sim = zeros(N, T);    
+u_sim(1:N/2,T) = 1;
+
+shock = rand(N,T);                      %generate random numbers
+
+mc = dtmc(P);                           %create a markov chain from P
+z_sim = simulate(mc, T);                %simulate markov chain (indexes)
+
+for t=1:T-1
+    for n=1:N
+        
+        s_sim(n,t) = policy_effort(w_sim(n,t), z_sim(t));
+        
+        %Unemployed agent at t
+        if u_sim(n,t) == 1
+            if shock(n,t)<lambda(s_sim(n,t))*p(theta(w_sim(n,t), z_sim(t))) %matches a firm and gets a job
+                u_sim(n,t+1) = 0;                                           %becomes employed
+                w_sim(n,t+1) = policy_wage(w_sim(n,t), z_sim(t));           %wage from tomorrow on
+                b_sim(n,t+1) = b_sim(n,t+1);                                           
+            else                                                            %does not match a firm
+                u_sim(n,t+1) = 1;   %remains unemployed
+                w_sim(n,t+1) = w_sim(n,t+1);
+                b_sim(n,t+1) = (shock(n,t)<0.1)*1 + (shock(n,t)>0.1)*b_sim(n,t);    %keep unemployment benefit w.p 0.9
+            end     %end matching case
+        %Employed agent at t
+        else
+            s_sim(n,t) = policy_effort(w_sim(n,t), z_sim(t));
+            if shock(n,t)<delta(w_sim(n,t), z_sim(t+1))                     %hit by separation shock
+                u_sim(n,t+1) = 1;   %becomes unemployed
+                w_sim(n,t+1) = w_sim(n,t);
+                b_sim(n,t+1) = (w_sim(n,t)>1)*floor(w_sim(n,t)/2) + (w_sim(n,t)==1);    %first UI is w/2
+            else
+                u_sim(n,t+1) = 0;           %remains employed
+                w_sim(n,t+1) = w_sim(n,t);  %keep same wage
+                b_sim(n,t+1) = b_sim(n,t);
+            end     %end separation shock case
+        end         %end employment status
+
+        
+
+
+    end     %end loop N
+end         %end loop T
+
+
+w_sim = w_sim(:, 101:T);
+z_sim = z_sim(:, 101:T);
+u_sim = u_sim(:, 101:T);
+b_sim = b_sim(:, 101:T);
+
+% Print statistics
+
+
+

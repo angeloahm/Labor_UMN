@@ -1,0 +1,112 @@
+%% Solve model 
+
+fprintf('=============================\n')
+fprintf('Solving the model...\n')
+fprintf('=============================\n')
+
+%Allocate arrays
+J0 = zeros(n_w, n_z);
+W0 = zeros(n_w, n_z);
+U0 = zeros(n_w, n_z);
+J = zeros(n_w, n_z);
+W = zeros(n_w, n_z);
+U = zeros(n_w, n_z);
+value_search = zeros(n_w, n_z);
+RHS = zeros(n_s, n_z);
+policy_wage = zeros(n_w, n_z);
+idx_wage = zeros(n_w, n_z);
+policy_effort = zeros(n_w, n_z);
+
+%% Solve for J
+fprintf('Iterating J...\n')
+fprintf('----------------------\n')
+for iter = 1:max_iter
+
+    for i_w=1:n_w
+        w = w_grid(i_w);
+        J(i_w,:) = z_grid - w + beta*(1-delta(w,z_grid)) .* J0(i_w,:) * P';
+    end
+
+    %Compute norm
+    norm = max(abs(J(:)-J0(:)));
+
+    %Check convergence
+    if norm>eps
+        J0=J;   %update J
+        if mod(iter, print)==0
+            fprintf('Error = %.8f      Iter = %.0f \n',norm, iter)
+        end
+    else
+        fprintf('Solution has been found! \n')
+        fprintf('Error = %.8f      Iter = %.0f \n',norm, iter)
+        break
+    end
+
+end
+
+
+%% Solve for theta
+
+J(J<0) = eps;
+X = ( (k./J).^(-gamma) - 1);
+X(X<0) = 0;                     %deal with possible negative numbers raised to a expoent. 
+theta = X.^(1/gamma);
+
+
+%% Solve for W and U
+fprintf('----------------------\n')
+fprintf('Iterating W and U...\n')
+fprintf('----------------------\n')
+for iter=1:max_iter
+
+    
+    for i_w=1:n_w
+        w = w_grid(i_w);
+        b = b_grid(i_w);        
+        i_prime = (i_w>1)*floor(i_w/2)+(i_w==1);
+
+        %Solve worker problem
+        W(i_w,:) = u(w,0) + beta* ( (1-delta(w,z_grid)).*W0(i_w,:) +  delta(w,z_grid).*U0(i_prime,:) ) * P';
+        
+        %Solve unemployed problem
+        %Compute expected value of searching (for each possible wage posted)
+        for i=1:n_w
+            value_search(i,:) = p(theta(i,:)).*W0(i,:) + ...              %search and find a job
+                      (1-p(theta(i,:))).*(0.9*U0(i_w,:)+0.1*U0(1,:));       %search and DON'T find a job
+        end
+        %Maximize over wage posting 
+        [opt_search_value, idx_w] = max(value_search);
+        policy_wage(i_w,:) = w_grid(idx_w);
+        idx_wage(i_w, :) = idx_w;
+
+        %Compute expected value of not searching
+        no_search = 0.9*U0(i_w,:) + 0.1*U0(1,:);
+        
+        %Compute RHS of the Bellman equation and maximize over s values
+        for i_s=1:n_s
+            s = s_grid(i_s);
+            RHS(i_s, :) = u(b, s) + beta*(lambda(s)*opt_search_value + (1-lambda(s))*no_search)* P';
+        end
+        
+        [U(i_w,:), idx_s] = max(RHS);
+        policy_effort(i_w,:) = s_grid(idx_s);
+        
+    end
+
+    %Compute norm 
+    norm = max( max(abs(W(:)-W0(:))), max(abs(U(:)-U0(:))) );
+
+    %Check convergence
+    if norm>eps
+        W0 = W; %update W
+        U0 = U; %update U
+        if mod(iter, print)==0
+            fprintf('Error = %.8f      Iter = %.0f \n',norm, iter)
+        end
+    else
+        fprintf('Solution has been found! \n')
+        fprintf('Error = %.8f      Iter = %.0f \n',norm, iter)
+        break
+    end
+
+end

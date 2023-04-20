@@ -15,7 +15,7 @@ r = 1/beta - 1;         %interest rate
 p = @(t) t.*(1+t.^gamma).^(-1/gamma);                       %job finding prob. function
 lambda = @(s) s.^a;                                         %meeting function as function of effort
 u = @(c,s) (c.^(1-sigma)-1) ./ (1-sigma) - alpha.*s.^chi;   %utility
-delta = @(w, z) (z>w)*delta_bar + (z<w);                    %match destruction function
+delta = @(w, z) (z>w)*delta_bar + (z<=w);                    %match destruction function
 
 % Shock parameters 
 m       = 3;            %number of std deviations above/below AR(1) mean
@@ -31,7 +31,7 @@ b_grid  = 0.54 .* w_grid;       %define b grid
 s_grid  = 0.2:0.02:0.4;         %define s grid
 
 max_iter = 10000;               %max. number of iterations
-eps = 1e-5;                     %tolerance for VFI
+eps = 1e-6;                     %tolerance for VFI
 print = 100;     
 
 n_z = 15;                       %number of AR(1) gridpoints
@@ -45,8 +45,8 @@ lower_UI = w_low * 0.54;
 
 % Simulation parameters
 N = 40000;      %agents simulated
-T = 500;        %periods simulated
-burn = 301;     %periods to be discarded
+T = 200;        %periods simulated
+burn = 101;     %periods to be discarded
 
 
 

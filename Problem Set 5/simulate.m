@@ -9,14 +9,14 @@ rng(17)
 
 % Allocate arrays 
 iw_sim = zeros(N, T);       %keep track of indices! (all agents start unemployed: iw=0)
-ib_sim = ones(N, T)*12;        %keep track of indices!
+ib_sim = ones(N, T);        %keep track of indices!
 s_sim = zeros(N, T);
 e_sim = zeros(N, T);    
 
 %generate random numbers
 shock_l = rand(N,T);
 shock_ui = rand(N,T);
-shock_b = rand(N,T);
+shock_b = rand(N,1);
 shock_p = rand(N,T);
 shock_delta = rand(N,T);
 shock_z = rand(1,T);
@@ -44,7 +44,6 @@ for n=1:N
         if e_sim(n,t-1) == 0
            
             ib_sim(n,t) = (shock_ui(n,t)<=0.1)*1 + (shock_ui(n,t)>0.1)*ib_sim(n,t-1);      %keep unemployment benefit w.p 0.9
-            
             %matches a firm
             if shock_l(n,t)<=lambda(s_sim(n,t-1))                                   
                %Note that the probability of a meeting depends of the
@@ -76,7 +75,7 @@ for n=1:N
         else
             
             %hit by separation shock
-            if shock_delta(n,t)<=(iz_sim(t)>iw_sim(n,t-1))*delta_bar + (iz_sim(t)<=iw_sim(n,t-1))   
+            if shock_delta(n,t)<=delta(w_grid(iw_sim(n,t-1)), z_grid(iz_sim(t)))
                 e_sim(n,t) = 0;                                                                     %becomes unemployed
                 ib_sim(n,t) = iw_sim(n,t-1);%(iw_sim(n,t-1)>1)*floor(iw_sim(n,t-1)/2) + (iw_sim(n,t-1)==1);%benefit indexed according to wage today!
                 iw_sim(n,t) = 0;               

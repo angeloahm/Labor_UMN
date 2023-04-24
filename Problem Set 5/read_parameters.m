@@ -46,7 +46,7 @@ lower_UI = w_low * 0.54;
 % Simulation parameters
 N = 40000;      %agents simulated
 T = 200;        %periods simulated
-burn = 101;     %periods to be discarded
+burn = T/2+1;     %periods to be discarded
 
 
 

@@ -1,0 +1,50 @@
+%% Read Parameters 
+
+% Model parameters 
+beta  = 0.996;          %discount factor
+sigma = 0;              %risk aversion 
+k     = 1.89;           %vacancy posting cost
+alpha = 1;              %disutility of searching
+chi   = 2;              %disutility of searching
+a     = 1/3;            %elasticity of meeting wrt effort 
+gamma = 0.6;            %parameter of the job finding prob. 
+delta_bar = 0.012;      %match destruction
+r = 1/beta - 1;         %interest rate
+
+% Define important functions
+p = @(t) t.*(1+t.^gamma).^(-1/gamma);                       %job finding prob. function
+lambda = @(s) s.^a;                                         %meeting function as function of effort
+u = @(c,s) (c.^(1-sigma)-1) ./ (1-sigma) - alpha.*s.^chi;   %utility
+delta = @(w, z) (z>w)*delta_bar + (z<=w);                    %match destruction function
+
+% Shock parameters 
+m       = 3;            %number of std deviations above/below AR(1) mean
+sigma_e = 0.01;         %sd of the AR(1)
+rho     = 0.98;         %autocorrelation of the AR(1)
+
+% Numerical parameters 
+w_low   = 0.1;                  %lower bound of w
+w_high  = 1;                    %upper bound of w
+step    = 0.025;                %step
+w_grid  = w_low:step:w_high;    %define wage grid
+%b_grid  = 0.54 .* w_grid;       %define b grid 
+s_grid  = 0.2:0.02:0.4;         %define s grid
+
+max_iter = 10000;               %max. number of iterations
+eps = 1e-6;                     %tolerance for VFI
+print = 100;     
+
+n_z = 15;                       %number of AR(1) gridpoints
+n_w = length(w_grid);           %number of wage gridpoints
+n_s = length(s_grid);           %number of effort gridpoints
+
+[log_z, P] = tauchen(n_z, m, 0, rho, sigma_e);
+z_grid = exp(log_z);            %define the grid for the AR(1) shock
+
+% Simulation parameters
+N = 40000;      %agents simulated
+T = 200;        %periods simulated
+burn = T/2+1;     %periods to be discarded
+
+
+
